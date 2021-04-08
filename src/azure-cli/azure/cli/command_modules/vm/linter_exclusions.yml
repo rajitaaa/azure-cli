@@ -31,7 +31,10 @@ vm encryption enable:
             - missing_parameter_help
 vm install-patches:
     parameters:
-        classifications_to_include:
+        classifications_to_include_win:
+            rule_exclusions:
+            - option_length_too_long
+        classifications_to_include_linux:
             rule_exclusions:
             - option_length_too_long
         exclude_kbs_requiring_reboot:
