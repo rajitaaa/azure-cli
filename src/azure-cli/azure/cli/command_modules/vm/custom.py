@@ -3728,31 +3728,11 @@ def set_disk_access(cmd, client, parameters, resource_group_name, disk_access_na
 
 
 # region install patches
-def install_vm_patches(cmd, client, resource_group_name, vm_name, maximum_duration, reboot_setting, classifications_to_include=None, kb_numbers_to_include=None, kb_numbers_to_exclude=None,
+def install_vm_patches(cmd, client, resource_group_name, vm_name, maximum_duration, reboot_setting, classifications_to_include_win=None, classifications_to_include_linux=None, kb_numbers_to_include=None, kb_numbers_to_exclude=None,
                        exclude_kbs_requiring_reboot=None, package_name_masks_to_include=None, package_name_masks_to_exclude=None, no_wait=False):
-    VMInstallPatchesParameters, WindowsParameters, LinuxParameters, VMGuestPatchClassificationWindows, VMGuestPatchClassificationLinux = cmd.get_models(
-        'VirtualMachineInstallPatchesParameters', 'WindowsParameters', 'LinuxParameters', 'VMGuestPatchClassificationWindows', 'VMGuestPatchClassificationLinux')
-    vm = client.get(resource_group_name, vm_name)
-    if not vm:
-        raise ValidationError("Can't get the VM named {} in resource group {}".format(vm_name, resource_group_name))
-    osType, windows_parameters, linux_parameters = None, None, None
-    if vm.storage_profile and vm.storage_profile.os_disk and vm.storage_profile.os_disk.os_type:
-        osType = vm.storage_profile.os_disk.os_type.lower()
-    if osType == 'windows':
-        if classifications_to_include:
-            for cti in classifications_to_include:
-                if cti not in [x.value for x in VMGuestPatchClassificationWindows]:
-                    raise ValidationError('classifications_to_include value for Windows VM should be Critical/Security/UpdateRollUp/FeaturePack/ServicePack/Definition/Tools/Updates')
-        windows_parameters = WindowsParameters(classifications_to_include=classifications_to_include, kb_numbers_to_inclunde=kb_numbers_to_include, kb_numbers_to_exclude=kb_numbers_to_exclude, exclude_kbs_requirig_reboot=exclude_kbs_requiring_reboot)
-    elif osType == 'linux':
-        if classifications_to_include:
-            for cti in classifications_to_include:
-                if cti not in [x.value for x in VMGuestPatchClassificationLinux]:
-                    raise ValidationError('classifications_to_include value for Windows VM should be Critical/Security/Other')
-        linux_parameters = LinuxParameters(classifications_to_include=classifications_to_include, package_name_masks_to_include=package_name_masks_to_include, package_name_masks_to_exclude=package_name_masks_to_exclude)
-    else:
-        windows_parameters = WindowsParameters(classifications_to_include=classifications_to_include, kb_numbers_to_inclunde=kb_numbers_to_include, kb_numbers_to_exclude=kb_numbers_to_exclude, exclude_kbs_requirig_reboot=exclude_kbs_requiring_reboot)
-        linux_parameters = LinuxParameters(classifications_to_include=classifications_to_include, package_name_masks_to_include=package_name_masks_to_include, package_name_masks_to_exclude=package_name_masks_to_exclude)
+    VMInstallPatchesParameters, WindowsParameters, LinuxParameters = cmd.get_models('VirtualMachineInstallPatchesParameters', 'WindowsParameters', 'LinuxParameters')
+    windows_parameters = WindowsParameters(classifications_to_include=classifications_to_include_win, kb_numbers_to_inclunde=kb_numbers_to_include, kb_numbers_to_exclude=kb_numbers_to_exclude, exclude_kbs_requirig_reboot=exclude_kbs_requiring_reboot)
+    linux_parameters = LinuxParameters(classifications_to_include=classifications_to_include_linux, package_name_masks_to_include=package_name_masks_to_include, package_name_masks_to_exclude=package_name_masks_to_exclude)
     install_patches_input = VMInstallPatchesParameters(maximum_duration=maximum_duration, reboot_setting=reboot_setting, linux_parameters=linux_parameters, windows_parameters=windows_parameters)
 
     return sdk_no_wait(no_wait, client.begin_install_patches, resource_group_name=resource_group_name, vm_name=vm_name, install_patches_input=install_patches_input)
